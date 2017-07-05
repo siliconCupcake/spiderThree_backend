@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.curve.nandhakishore.spiderthreeback.CityForecast">
+
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/r_view"
+        android:paddingBottom="10dp"
+        android:clipToPadding="false">
+
+    </android.support.v7.widget.RecyclerView>
+
+    <ProgressBar
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="150dp"
+        android:id="@+id/loading"/>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:id="@+id/no_net"
+        android:visibility="gone"
+        android:layout_marginBottom="15dp">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="5dp"
+            android:layout_centerInParent="true"
+            android:id="@+id/error_ic"
+            android:src="@drawable/ic_error_logo" />
+
+        <com.curve.nandhakishore.spiderthreeback.customTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No internet connection"
+            android:id="@+id/e_msg"
+            android:textSize="18sp"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:layout_below="@id/error_ic"
+            app:customFont="patua_one.ttf" />
+
+    </RelativeLayout>
+
+</FrameLayout>

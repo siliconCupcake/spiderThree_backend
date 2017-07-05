@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_height="match_parent"
+    android:padding="15dp"
+    tools:context="com.curve.nandhakishore.spiderthreeback.WeatherHome">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.6"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <EditText
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:layout_height="wrap_content"
+            android:hint="Enter city"
+            android:inputType="text"
+            android:layout_marginEnd="4dp"
+            android:id="@+id/search_bar"
+            android:imeOptions="actionSearch" />
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Search"
+            android:id="@+id/search_button" />
+
+    </LinearLayout>
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="11"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <android.support.v7.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_margin="8dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/cv"
+            android:visibility="gone"
+            android:layout_gravity="top"
+            app:cardCornerRadius="4dp">
+
+            <ProgressBar
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_margin="30dp"
+                android:layout_gravity="center"
+                android:id="@+id/p_bar"
+                android:visibility="gone" />
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:id="@+id/no_net"
+                android:visibility="gone"
+                android:layout_marginBottom="15dp">
+
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_margin="5dp"
+                    android:layout_centerInParent="true"
+                    android:id="@+id/error_ic"
+                    android:src="@drawable/ic_error_logo" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No internet connection"
+                    android:id="@+id/e_msg"
+                    android:textSize="18sp"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center"
+                    android:layout_below="@id/error_ic"
+                    app:customFont="patua_one.ttf" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="15dp"
+                android:paddingEnd="15dp"
+                android:paddingBottom="5dp"
+                android:visibility="visible"
+                android:id="@+id/card">
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:customFont="patua_one.ttf"
+                    android:layout_marginStart="15dp"
+                    android:id="@+id/date"
+                    android:textSize="35sp"
+                    android:text="New York" />
+
+                <ImageView
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
+                    android:id="@+id/icon"
+                    android:src="@drawable/i10d"
+                    android:layout_alignParentEnd="true"
+                    android:scaleX="1"
+                    android:scaleY="1" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/weather_main"
+                    android:layout_below="@+id/date"
+                    android:layout_marginStart="15dp"
+                    android:textSize="25sp"
+                    android:gravity="bottom"
+                    app:customFont="patua_one.ttf"
+                    android:text="Rain" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/country"
+                    android:layout_toEndOf="@+id/date"
+                    android:layout_marginStart="5dp"
+                    android:layout_above="@id/weather_main"
+                    android:layout_marginBottom="4dp"
+                    android:textSize="18sp"
+                    android:gravity="bottom"
+                    app:customFont="patua_one.ttf"
+                    android:text="US" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:customFont="patua_one.ttf"
+                    android:id="@+id/description"
+                    android:layout_marginStart="10dp"
+                    android:layout_below="@+id/date"
+                    android:layout_toEndOf="@+id/weather_main"
+                    android:layout_marginTop="9dp"
+                    android:textSize="15sp"
+                    android:text="Light rain" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:customFont="patua_one.ttf"
+                    android:textSize="18sp"
+                    android:layout_marginTop="15dp"
+                    android:id="@+id/temp"
+                    android:layout_marginStart="15dp"
+                    android:layout_below="@+id/description"
+                    android:layout_alignParentStart="true"
+                    android:text="Temp: 45" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/min_temp"
+                    android:layout_below="@+id/description"
+                    android:layout_marginTop="15dp"
+                    android:textSize="18sp"
+                    android:layout_toEndOf="@+id/temp"
+                    android:layout_marginStart="30dp"
+                    app:customFont="patua_one.ttf"
+                    android:text="Min: 25" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/max_temp"
+                    android:layout_toEndOf="@+id/min_temp"
+                    android:layout_marginTop="15dp"
+                    android:layout_below="@+id/description"
+                    android:layout_marginStart="30dp"
+                    android:textSize="18sp"
+                    app:customFont="patua_one.ttf"
+                    android:text="Max: 45" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/pressure"
+                    android:textSize="18sp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_below="@+id/temp"
+                    android:layout_alignParentStart="true"
+                    app:customFont="patua_one.ttf"
+                    android:text="Pressure: 1018" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_below="@+id/temp"
+                    android:layout_toEndOf="@id/pressure"
+                    android:layout_marginStart="35dp"
+                    android:id="@+id/humidity"
+                    android:textSize="18sp"
+                    app:customFont="patua_one.ttf"
+                    android:text="Humidity: 49%" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/wind_speed"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_below="@+id/pressure"
+                    android:textSize="18sp"
+                    app:customFont="patua_one.ttf"
+                    android:text="Wind speed: 1.31" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/cloudiness"
+                    android:layout_marginTop="8dp"
+                    android:layout_below="@+id/pressure"
+                    android:layout_toEndOf="@+id/wind_speed"
+                    android:layout_marginStart="35dp"
+                    android:textSize="18sp"
+                    app:customFont="patua_one.ttf"
+                    android:text="Cloudiness: 40%" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@android:style/Widget.Holo.Button.Borderless"
+                    android:textSize="15sp"
+                    android:text="MORE"
+                    android:textStyle="bold"
+                    android:id="@+id/forecast"
+                    android:layout_below="@id/cloudiness"
+                    android:layout_marginTop="10dp"
+                    android:textColor="#009688"
+                    android:layout_alignParentEnd="true"/>
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/refresh"
+                    style="@android:style/Widget.Holo.Button.Borderless"
+                    android:text="REFRESH"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_below="@id/cloudiness"
+                    android:layout_toStartOf="@id/forecast"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginTop="10dp"
+                    android:textColor="#009688" />
+
+                <com.curve.nandhakishore.spiderthreeback.customTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/time"
+                    android:layout_marginTop="35dp"
+                    android:textSize="10sp"
+                    android:layout_marginStart="8dp"
+                    android:layout_toStartOf="@id/refresh"
+                    android:gravity="bottom"
+                    android:layout_below="@id/wind_speed"
+                    android:layout_alignParentStart="true"
+                    app:customFont="patua_one.ttf"
+                    android:text="Last updated at DD:MM:YYYY HH:MM:SS " />
+
+            </RelativeLayout>
+
+        </android.support.v7.widget.CardView>
+
+    </FrameLayout>
+
+</LinearLayout>
