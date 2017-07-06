@@ -92,7 +92,6 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="15dp"
                 android:paddingEnd="15dp"
-                android:paddingBottom="5dp"
                 android:visibility="visible"
                 android:id="@+id/card">
 
@@ -241,6 +240,7 @@
                     android:text="MORE"
                     android:textStyle="bold"
                     android:id="@+id/forecast"
+                    android:layout_marginBottom="5dp"
                     android:layout_below="@id/cloudiness"
                     android:layout_marginTop="10dp"
                     android:textColor="#009688"
@@ -254,6 +254,7 @@
                     android:text="REFRESH"
                     android:textSize="15sp"
                     android:textStyle="bold"
+                    android:layout_marginBottom="5dp"
                     android:layout_below="@id/cloudiness"
                     android:layout_toStartOf="@id/forecast"
                     android:layout_marginEnd="5dp"

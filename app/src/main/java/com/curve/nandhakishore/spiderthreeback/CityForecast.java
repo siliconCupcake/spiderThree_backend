@@ -34,6 +34,7 @@ public class CityForecast extends AppCompatActivity {
     RecyclerView rView;
     String city;
     RecyclerView.LayoutManager layoutManager;
+    databaseManage dbData = new databaseManage(this);
     ForecastAdapter adapter;
     int state;
     RelativeLayout error;
@@ -43,6 +44,7 @@ public class CityForecast extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.city_forecast);
 
+        dbData.open();
         city = getIntent().getStringExtra("city");
         setTitle(city);
         rView = (RecyclerView) findViewById(R.id.r_view);
@@ -55,11 +57,17 @@ public class CityForecast extends AppCompatActivity {
         state = 1;
         if (!isNetworkAvailable()) {
             state = 0;
-            pBar.setVisibility(View.GONE);
-            error.setVisibility(View.VISIBLE);
+            forecast = dbData.getForecast(city);
+            if (forecast == null) {
+                pBar.setVisibility(View.GONE);
+                error.setVisibility(View.VISIBLE);
+            } else {
+                error.setVisibility(View.GONE);
+                pBar.setVisibility(View.GONE);
+                rView.setVisibility(View.VISIBLE);
+            }
         }
 
-        Log.e("List state", String.valueOf(forecast.isEmpty()));
         adapter = new ForecastAdapter(this, forecast, state);
         rView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
@@ -90,8 +98,14 @@ public class CityForecast extends AppCompatActivity {
             public void onResponse(Call<ForecastWeather> call, Response<ForecastWeather> response) {
                 if(response.isSuccessful()) {
                     result = response.body();
+                    try{
+                        dbData.removeForecast(result);
+                    }catch (Exception e){
+                        Log.e("Database del", e.getMessage());
+                    }
                     for (int i = 0; i < result.getList().size(); i+=8) {
                         forecast.add(result.getList().get(i));
+                        dbData.addForecast(result.getList().get(i), result.getCity().getName());
                     }
                     adapter.setWeather(forecast);
                     pBar.setVisibility(View.GONE);
@@ -117,4 +131,9 @@ public class CityForecast extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
     }
 
+    @Override
+    protected void onDestroy() {
+        dbData.close();
+        super.onDestroy();
+    }
 }

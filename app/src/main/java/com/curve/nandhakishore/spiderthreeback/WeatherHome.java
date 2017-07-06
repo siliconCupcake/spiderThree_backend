@@ -46,6 +46,7 @@ public class WeatherHome extends AppCompatActivity {
     URL imgUrl;
     Retrofit retroFit;
     CurrentWeather result;
+    databaseManage dbData = new databaseManage(this);
     EditText searchBar;
     Button searchButton, more, refresh;
     customTextView name, main, desc, temp, min, max, pressure, humidity, wind, clouds, errorMessage, time, country;
@@ -63,6 +64,7 @@ public class WeatherHome extends AppCompatActivity {
         initRetrofit();
         searchBar = (EditText) findViewById(R.id.search_bar);
         searchButton = (Button) findViewById(R.id.search_button);
+        dbData.open();
 
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,10 +77,19 @@ public class WeatherHome extends AppCompatActivity {
                         pBar.setVisibility(View.VISIBLE);
                         getWeather(searchBar.getText().toString());
                     } else {
-                        card.setVisibility(View.VISIBLE);
-                        rl.setVisibility(View.GONE);
-                        pBar.setVisibility(View.GONE);
-                        error.setVisibility(View.VISIBLE);
+                        result = dbData.getWeather(searchBar.getText().toString());
+                        if (result == null) {
+                            card.setVisibility(View.VISIBLE);
+                            rl.setVisibility(View.GONE);
+                            pBar.setVisibility(View.GONE);
+                            error.setVisibility(View.VISIBLE);
+                        } else {
+                            card.setVisibility(View.VISIBLE);
+                            error.setVisibility(View.GONE);
+                            pBar.setVisibility(View.GONE);
+                            rl.setVisibility(View.VISIBLE);
+                            displayWeather(result);
+                        }
                     }
                     hideSoftKeyboard();
                 }
@@ -99,10 +110,19 @@ public class WeatherHome extends AppCompatActivity {
                             pBar.setVisibility(View.VISIBLE);
                             getWeather(searchBar.getText().toString());
                         } else {
-                            card.setVisibility(View.VISIBLE);
-                            rl.setVisibility(View.GONE);
-                            pBar.setVisibility(View.GONE);
-                            error.setVisibility(View.VISIBLE);
+                            result = dbData.getWeather(searchBar.getText().toString());
+                            if (result == null) {
+                                card.setVisibility(View.VISIBLE);
+                                rl.setVisibility(View.GONE);
+                                pBar.setVisibility(View.GONE);
+                                error.setVisibility(View.VISIBLE);
+                            } else {
+                                card.setVisibility(View.VISIBLE);
+                                error.setVisibility(View.GONE);
+                                pBar.setVisibility(View.GONE);
+                                rl.setVisibility(View.VISIBLE);
+                                displayWeather(result);
+                            }
                         }
                         hideSoftKeyboard();
                     }
@@ -117,18 +137,26 @@ public class WeatherHome extends AppCompatActivity {
         refresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(isNetworkAvailable()) {
+                if (isNetworkAvailable()) {
                     card.setVisibility(View.VISIBLE);
                     error.setVisibility(View.GONE);
                     rl.setVisibility(View.GONE);
                     pBar.setVisibility(View.VISIBLE);
-                    getWeather(name.getText().toString());
-                }
-                else {
-                    card.setVisibility(View.VISIBLE);
-                    rl.setVisibility(View.GONE);
-                    pBar.setVisibility(View.GONE);
-                    error.setVisibility(View.VISIBLE);
+                    getWeather(searchBar.getText().toString());
+                } else {
+                    result = dbData.getWeather(searchBar.getText().toString());
+                    if (result == null) {
+                        card.setVisibility(View.VISIBLE);
+                        rl.setVisibility(View.GONE);
+                        pBar.setVisibility(View.GONE);
+                        error.setVisibility(View.VISIBLE);
+                    } else {
+                        card.setVisibility(View.VISIBLE);
+                        error.setVisibility(View.GONE);
+                        pBar.setVisibility(View.GONE);
+                        rl.setVisibility(View.VISIBLE);
+                        displayWeather(result);
+                    }
                 }
             }
         });
@@ -163,6 +191,13 @@ public class WeatherHome extends AppCompatActivity {
             public void onResponse(Call<CurrentWeather> call, Response<CurrentWeather> response) {
                 if(response.isSuccessful()) {
                     result = response.body();
+                    try{
+                        dbData.removeWeather(result);
+                    }
+                    catch (Exception e){
+                        Log.e("Database del", e.getMessage());
+                    }
+                    dbData.addWeather(result);
                     pBar.setVisibility(View.GONE);
                     rl.setVisibility(View.VISIBLE);
                     displayWeather(result);
@@ -247,5 +282,11 @@ public class WeatherHome extends AppCompatActivity {
             InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
             inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        dbData.close();
+        super.onDestroy();
     }
 }
