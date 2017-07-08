@@ -1,6 +1,5 @@
 package com.curve.nandhakishore.spiderthreeback;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -8,28 +7,36 @@ import android.net.NetworkInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.bumptech.glide.Glide;
+import com.curve.nandhakishore.spiderthreeback.Models.Places.PlacePredictions;
 import com.curve.nandhakishore.spiderthreeback.Models.Today.CurrentWeather;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.TimeZone;
 
 import retrofit2.Call;
@@ -41,13 +48,20 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class WeatherHome extends AppCompatActivity {
 
     static final String BASE_URL = "http://api.openweathermap.org/data/2.5/";
+    static final String PLACE_URL = "https://maps.googleapis.com/maps/api/place/autocomplete/";
     static final String API_KEY = "b2a4634d73179061c182c1850b050d99";
+    static final String PLACE_KEY = "AIzaSyBPAc0ObhV5BGj6dAavkqcqUxdsR44uURQ";
+    static final String PLACE_TYPE = "(cities)";
+    static final String TAG = "WeatherHome";
     Gson gson;
     URL imgUrl;
-    Retrofit retroFit;
+    Retrofit wRetroFit, pRetroFit;
+    PlacePredictions predictions;
+    ArrayAdapter<String> adapter;
+    ArrayList<String> predictionList = new ArrayList<>();
     CurrentWeather result;
     databaseManage dbData = new databaseManage(this);
-    EditText searchBar;
+    AutoCompleteTextView searchBar;
     Button searchButton, more, refresh;
     customTextView name, main, desc, temp, min, max, pressure, humidity, wind, clouds, errorMessage, time, country;
     ImageView icon;
@@ -61,8 +75,9 @@ public class WeatherHome extends AppCompatActivity {
         setContentView(R.layout.weather_home);
 
         initCard();
-        initRetrofit();
-        searchBar = (EditText) findViewById(R.id.search_bar);
+        initWeatherRetrofit();
+        initPlacesRetrofit();
+        searchBar = (AutoCompleteTextView) findViewById(R.id.search_bar);
         searchButton = (Button) findViewById(R.id.search_button);
         dbData.open();
 
@@ -95,6 +110,25 @@ public class WeatherHome extends AppCompatActivity {
                 }
                 else
                     Toast.makeText(getApplicationContext(), "The text field is blank", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        searchBar.setThreshold(3);
+        searchBar.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Log.e(TAG, "TextWatcher: " + charSequence.toString());
+                getPlaces(charSequence.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
             }
         });
 
@@ -172,19 +206,61 @@ public class WeatherHome extends AppCompatActivity {
 
     }
 
-    private void initRetrofit() {
+    private void initPlacesRetrofit() {
         gson = new GsonBuilder()
                 .setLenient()
                 .create();
 
-        retroFit = new Retrofit.Builder()
+        pRetroFit = new Retrofit.Builder()
+                .baseUrl(PLACE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+    }
+
+    private void getPlaces(String search) {
+        PlacesApi api = pRetroFit.create(PlacesApi.class);
+        Call<PlacePredictions> call = api.getPlaces(search, PLACE_TYPE, PLACE_KEY);
+        Log.e(TAG, "getPlaces : entered");
+        call.enqueue(new Callback<PlacePredictions>() {
+            @Override
+            public void onResponse(Call<PlacePredictions> call, Response<PlacePredictions> response) {
+                if(response.isSuccessful()){
+                    predictions = response.body();
+                    Log.e(TAG, "Count: " + String.valueOf(predictions.getPredictions().size()));
+                    predictionList.clear();
+                    for(int i = 0; i < predictions.getPredictions().size(); i++) {
+                        Log.e(TAG, "Adapter List: " + predictions.getPredictions().get(i).getStructuredFormatting().getMainText());
+                        predictionList.add(predictions.getPredictions().get(i).getStructuredFormatting().getMainText());
+                    }
+                    adapter = new ArrayAdapter<String>(getBaseContext(), android.R.layout.select_dialog_item, predictionList);
+                    searchBar.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();
+                }
+                else
+                    Log.e(TAG, "Response failed");
+            }
+
+            @Override
+            public void onFailure(Call<PlacePredictions> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
+
+    }
+
+    private void initWeatherRetrofit() {
+        gson = new GsonBuilder()
+                .setLenient()
+                .create();
+
+        wRetroFit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
     }
 
     private void getWeather(String city) {
-        OpenWeatherApi api = retroFit.create(OpenWeatherApi.class);
+        OpenWeatherApi api = wRetroFit.create(OpenWeatherApi.class);
         Call<CurrentWeather> call = api.getWeather(city, API_KEY);
         call.enqueue(new Callback<CurrentWeather>() {
             @Override
