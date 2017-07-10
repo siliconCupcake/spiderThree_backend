@@ -36,7 +36,7 @@ public class CityForecast extends AppCompatActivity {
     RecyclerView.LayoutManager layoutManager;
     databaseManage dbData = new databaseManage(this);
     ForecastAdapter adapter;
-    int state;
+    int state, id;
     RelativeLayout error;
 
     @Override
@@ -46,6 +46,7 @@ public class CityForecast extends AppCompatActivity {
 
         dbData.open();
         city = getIntent().getStringExtra("city");
+        id = getIntent().getIntExtra("id", 0);
         setTitle(city);
         rView = (RecyclerView) findViewById(R.id.r_view);
         layoutManager = new LinearLayoutManager(this);
@@ -57,7 +58,7 @@ public class CityForecast extends AppCompatActivity {
         state = 1;
         if (!isNetworkAvailable()) {
             state = 0;
-            forecast = dbData.getForecast(city);
+            forecast = dbData.getForecast(id);
             if (forecast == null) {
                 pBar.setVisibility(View.GONE);
                 error.setVisibility(View.VISIBLE);
@@ -73,7 +74,7 @@ public class CityForecast extends AppCompatActivity {
         adapter.notifyDataSetChanged();
 
         if (state == 1){
-            getForecast(city);
+            getForecast();
         }
 
 
@@ -90,9 +91,9 @@ public class CityForecast extends AppCompatActivity {
                 .build();
     }
 
-    private void getForecast(String city) {
+    private void getForecast() {
         OpenWeatherApi api = retroFit.create(OpenWeatherApi.class);
-        Call<ForecastWeather> call = api.getForecast(city, API_KEY);
+        Call<ForecastWeather> call = api.getForecast(id, API_KEY);
         call.enqueue(new Callback<ForecastWeather>() {
             @Override
             public void onResponse(Call<ForecastWeather> call, Response<ForecastWeather> response) {
@@ -105,7 +106,7 @@ public class CityForecast extends AppCompatActivity {
                     }
                     for (int i = 0; i < result.getList().size(); i+=8) {
                         forecast.add(result.getList().get(i));
-                        dbData.addForecast(result.getList().get(i), result.getCity().getName());
+                        dbData.addForecast(result.getList().get(i), result.getCity().getName(), result.getCity().getId());
                     }
                     adapter.setWeather(forecast);
                     pBar.setVisibility(View.GONE);

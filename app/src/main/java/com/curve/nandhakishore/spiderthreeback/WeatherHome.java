@@ -15,8 +15,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -26,11 +25,11 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
+import com.curve.nandhakishore.spiderthreeback.Models.Details.PlaceDetails;
 import com.curve.nandhakishore.spiderthreeback.Models.Places.PlacePredictions;
 import com.curve.nandhakishore.spiderthreeback.Models.Today.CurrentWeather;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -38,7 +37,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -48,7 +46,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class WeatherHome extends AppCompatActivity {
 
     static final String BASE_URL = "http://api.openweathermap.org/data/2.5/";
-    static final String PLACE_URL = "https://maps.googleapis.com/maps/api/place/autocomplete/";
+    static final String PLACE_URL = "https://maps.googleapis.com/maps/api/place/";
     static final String API_KEY = "b2a4634d73179061c182c1850b050d99";
     static final String PLACE_KEY = "AIzaSyBPAc0ObhV5BGj6dAavkqcqUxdsR44uURQ";
     static final String PLACE_TYPE = "(cities)";
@@ -56,18 +54,22 @@ public class WeatherHome extends AppCompatActivity {
     Gson gson;
     URL imgUrl;
     Retrofit wRetroFit, pRetroFit;
+    Double lat, lon;
     PlacePredictions predictions;
-    ArrayAdapter<String> adapter;
-    ArrayList<String> predictionList = new ArrayList<>();
+    String id;
+    PlaceDetails details;
+    SimpleAdapter adapter;
+    List<HashMap<String , String>> predictionList = new ArrayList<>();
     CurrentWeather result;
     databaseManage dbData = new databaseManage(this);
-    AutoCompleteTextView searchBar;
+    AutoCompletePlaces searchBar;
     Button searchButton, more, refresh;
     customTextView name, main, desc, temp, min, max, pressure, humidity, wind, clouds, errorMessage, time, country;
     ImageView icon;
     RelativeLayout rl, error;
     CardView card;
     ProgressBar pBar;
+    int apiCode = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,9 +79,18 @@ public class WeatherHome extends AppCompatActivity {
         initCard();
         initWeatherRetrofit();
         initPlacesRetrofit();
-        searchBar = (AutoCompleteTextView) findViewById(R.id.search_bar);
+        searchBar = (AutoCompletePlaces) findViewById(R.id.search_bar);
         searchButton = (Button) findViewById(R.id.search_button);
         dbData.open();
+
+        searchBar.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                apiCode = 1;
+                id = predictionList.get(i).get("id");
+                Log.e(TAG, "Item Id: " + predictionList.get(i).get("id"));
+            }
+        });
 
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,6 +102,7 @@ public class WeatherHome extends AppCompatActivity {
                         rl.setVisibility(View.GONE);
                         pBar.setVisibility(View.VISIBLE);
                         getWeather(searchBar.getText().toString());
+                        searchBar.setText("");
                     } else {
                         result = dbData.getWeather(searchBar.getText().toString());
                         if (result == null) {
@@ -122,7 +134,7 @@ public class WeatherHome extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.e(TAG, "TextWatcher: " + charSequence.toString());
+                apiCode = 0;
                 getPlaces(charSequence.toString());
             }
 
@@ -143,6 +155,7 @@ public class WeatherHome extends AppCompatActivity {
                             rl.setVisibility(View.GONE);
                             pBar.setVisibility(View.VISIBLE);
                             getWeather(searchBar.getText().toString());
+                            searchBar.setText("");
                         } else {
                             result = dbData.getWeather(searchBar.getText().toString());
                             if (result == null) {
@@ -200,6 +213,7 @@ public class WeatherHome extends AppCompatActivity {
             public void onClick(View view) {
                 Intent forecast = new Intent(getApplicationContext(), CityForecast.class);
                 forecast.putExtra("city", name.getText().toString());
+                forecast.putExtra("id", result.getId());
                 startActivity(forecast);
             }
         });
@@ -220,7 +234,6 @@ public class WeatherHome extends AppCompatActivity {
     private void getPlaces(String search) {
         PlacesApi api = pRetroFit.create(PlacesApi.class);
         Call<PlacePredictions> call = api.getPlaces(search, PLACE_TYPE, PLACE_KEY);
-        Log.e(TAG, "getPlaces : entered");
         call.enqueue(new Callback<PlacePredictions>() {
             @Override
             public void onResponse(Call<PlacePredictions> call, Response<PlacePredictions> response) {
@@ -229,10 +242,15 @@ public class WeatherHome extends AppCompatActivity {
                     Log.e(TAG, "Count: " + String.valueOf(predictions.getPredictions().size()));
                     predictionList.clear();
                     for(int i = 0; i < predictions.getPredictions().size(); i++) {
-                        Log.e(TAG, "Adapter List: " + predictions.getPredictions().get(i).getStructuredFormatting().getMainText());
-                        predictionList.add(predictions.getPredictions().get(i).getStructuredFormatting().getMainText());
+                        HashMap<String, String> place = new HashMap<String, String>();
+                        place.put("name", predictions.getPredictions().get(i).getStructuredFormatting().getMainText());
+                        place.put("description", predictions.getPredictions().get(i).getStructuredFormatting().getSecondaryText());
+                        place.put("id", predictions.getPredictions().get(i).getPlaceId());
+                        predictionList.add(place);
                     }
-                    adapter = new ArrayAdapter<String>(getBaseContext(), android.R.layout.select_dialog_item, predictionList);
+                    int[] to = new int[] {R.id.name_field, R.id.desc_field};
+                    String[] from = new String[] {"name", "description"};
+                    adapter = new SimpleAdapter(getBaseContext(), predictionList, R.layout.autocomplete_list_item, from, to);
                     searchBar.setAdapter(adapter);
                     adapter.notifyDataSetChanged();
                 }
@@ -242,6 +260,29 @@ public class WeatherHome extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<PlacePredictions> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
+    }
+
+    private void getDetails(String id) {
+        PlacesApi api = pRetroFit.create(PlacesApi.class);
+        Call<PlaceDetails> call = api.getDetails(id, PLACE_KEY);
+        call.enqueue(new Callback<PlaceDetails>() {
+            @Override
+            public void onResponse(Call<PlaceDetails> call, Response<PlaceDetails> response) {
+                if(response.isSuccessful()){
+                    details = response.body();
+                    lat = details.getResult().getGeometry().getLocation().getLat();
+                    lon = details.getResult().getGeometry().getLocation().getLng();
+                    getWeatherByCoord();
+                }
+                else
+                    Log.e(TAG, "Response failed");
+            }
+
+            @Override
+            public void onFailure(Call<PlaceDetails> call, Throwable t) {
                 t.printStackTrace();
             }
         });
@@ -260,37 +301,12 @@ public class WeatherHome extends AppCompatActivity {
     }
 
     private void getWeather(String city) {
-        OpenWeatherApi api = wRetroFit.create(OpenWeatherApi.class);
-        Call<CurrentWeather> call = api.getWeather(city, API_KEY);
-        call.enqueue(new Callback<CurrentWeather>() {
-            @Override
-            public void onResponse(Call<CurrentWeather> call, Response<CurrentWeather> response) {
-                if(response.isSuccessful()) {
-                    result = response.body();
-                    try{
-                        dbData.removeWeather(result);
-                    }
-                    catch (Exception e){
-                        Log.e("Database del", e.getMessage());
-                    }
-                    dbData.addWeather(result);
-                    pBar.setVisibility(View.GONE);
-                    rl.setVisibility(View.VISIBLE);
-                    displayWeather(result);
-                }
-                else {
-                    card.setVisibility(View.GONE);
-                    Toast.makeText(getApplicationContext(), "Unable to fetch data", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<CurrentWeather> call, Throwable t) {
-                card.setVisibility(View.GONE);
-                Toast.makeText(getApplicationContext(), "Unable to fetch data", Toast.LENGTH_SHORT).show();
-                t.printStackTrace();
-            }
-        });
+        if (apiCode == 0) {
+            getWeatherByName(city);
+        }
+        else {
+            getDetails(id);
+        }
     }
 
     private void initCard(){
@@ -351,6 +367,77 @@ public class WeatherHome extends AppCompatActivity {
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+    }
+
+    private void getWeatherByCoord (){
+        OpenWeatherApi api = wRetroFit.create(OpenWeatherApi.class);
+        Call<CurrentWeather> call;
+        call = api.getWeatherByCoord(lat, lon, API_KEY);
+        call.enqueue(new Callback<CurrentWeather>() {
+            @Override
+            public void onResponse(Call<CurrentWeather> call, Response<CurrentWeather> response) {
+                if(response.isSuccessful()) {
+                    result = response.body();
+                    try{
+                        dbData.removeWeather(result);
+                    }
+                    catch (Exception e){
+                        Log.e("Database del", e.getMessage());
+                    }
+                    dbData.addWeather(result);
+                    pBar.setVisibility(View.GONE);
+                    rl.setVisibility(View.VISIBLE);
+                    displayWeather(result);
+                }
+                else {
+                    card.setVisibility(View.GONE);
+                    Toast.makeText(getApplicationContext(), "Unable to fetch data", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CurrentWeather> call, Throwable t) {
+                card.setVisibility(View.GONE);
+                Toast.makeText(getApplicationContext(), "Unable to fetch data", Toast.LENGTH_SHORT).show();
+                t.printStackTrace();
+            }
+        });
+
+    }
+
+    private void getWeatherByName(String city){
+        OpenWeatherApi api = wRetroFit.create(OpenWeatherApi.class);
+        Call<CurrentWeather> call;
+        call = api.getWeatherByName(city, API_KEY);
+        call.enqueue(new Callback<CurrentWeather>() {
+            @Override
+            public void onResponse(Call<CurrentWeather> call, Response<CurrentWeather> response) {
+                if(response.isSuccessful()) {
+                    result = response.body();
+                    try{
+                        dbData.removeWeather(result);
+                    }
+                    catch (Exception e){
+                        Log.e("Database del", e.getMessage());
+                    }
+                    dbData.addWeather(result);
+                    pBar.setVisibility(View.GONE);
+                    rl.setVisibility(View.VISIBLE);
+                    displayWeather(result);
+                }
+                else {
+                    card.setVisibility(View.GONE);
+                    Toast.makeText(getApplicationContext(), "Unable to fetch data", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CurrentWeather> call, Throwable t) {
+                card.setVisibility(View.GONE);
+                Toast.makeText(getApplicationContext(), "Unable to fetch data", Toast.LENGTH_SHORT).show();
+                t.printStackTrace();
+            }
+        });
     }
 
     public void hideSoftKeyboard() {
